@@ -1,0 +1,31 @@
+# =============================================================================
+# requirements.txt
+# Production dependencies for the Telegram bot.
+# Python 3.11.x required.
+# =============================================================================
+
+# --- Web framework ---
+Flask==3.0.3
+
+# --- WSGI server (production) ---
+gunicorn==21.2.0
+
+# --- Telegram Bot API wrapper (synchronous) ---
+pyTelegramBotAPI==4.21.0
+
+# --- MongoDB driver (synchronous) ---
+pymongo==4.6.3
+
+# --- HTTP client (URL detection, simple file downloads) ---
+requests==2.31.0
+
+# --- Video/m3u8 downloader ---
+# Not pinned: yt-dlp releases weekly; pinning breaks m3u8 support rapidly.
+yt-dlp
+
+# --- Telegram MTProto client (large file uploads, up to ~2 GB) ---
+pyrogram==2.0.106
+tgcrypto==1.2.5
+
+# --- Environment variable loader (local dev only) ---
+python-dotenv==1.0.1

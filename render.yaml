@@ -1,0 +1,73 @@
+# =============================================================================
+# render.yaml — Render Free Plan Web Service configuration.
+#
+# Deploy as a Web Service (NOT a Background Worker).
+# ffmpeg is installed during the build phase via apt-get.
+# Gunicorn serves the Flask app with a high timeout to support
+# long-running webhook processing threads.
+# =============================================================================
+
+services:
+  - type: web
+    name: telegram-bot
+    env: python
+    plan: free
+
+    # --- Build phase ---
+    # Install system dependency (ffmpeg) required by yt-dlp for m3u8 merging,
+    # then install Python packages.
+    buildCommand: |
+      apt-get update && apt-get install -y ffmpeg
+      pip install --upgrade pip
+      pip install -r requirements.txt
+
+    # --- Start command ---
+    # Gunicorn flags:
+    #   --workers 1        : Free plan is single-core; one worker is optimal.
+    #   --threads 2        : Allows the webhook handler and processing thread to
+    #                        run concurrently without multiple worker processes.
+    #   --timeout 120      : Prevents Gunicorn killing long-lived webhook threads.
+    #   --bind 0.0.0.0     : Render injects $PORT; bind to all interfaces.
+    #   --access-logfile - : Send access logs to stdout (visible in Render dashboard).
+    startCommand: >
+      gunicorn app:app
+      --workers 1
+      --threads 2
+      --timeout 120
+      --bind 0.0.0.0:$PORT
+      --access-logfile -
+      --error-logfile -
+      --log-level info
+
+    # --- Health check ---
+    healthCheckPath: /health
+
+    # --- Environment variables ---
+    # Set these in the Render dashboard. Do NOT commit real values here.
+    envVars:
+      - key: BOT_TOKEN
+        sync: false          # Secret — set manually in Render dashboard
+
+      - key: OWNER_ID
+        sync: false
+
+      - key: API_ID
+        sync: false
+
+      - key: API_HASH
+        sync: false
+
+      - key: MONGO_URI
+        sync: false
+
+      - key: WEBHOOK_SECRET
+        sync: false
+
+      - key: WEBHOOK_URL
+        sync: false          # e.g. https://your-service-name.onrender.com
+
+      - key: MONGO_DB_NAME
+        value: telegram_bot  # Non-secret default; can override in dashboard
+
+      - key: PYTHON_VERSION
+        value: 3.11.9
